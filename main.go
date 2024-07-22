@@ -26,8 +26,13 @@ func main() {
 
 	// Setup proxy routes
 	app.Get("/books", proxy.Forward("http://localhost:8080/books"))
+	app.Get("/books/:books_id", func(c *fiber.Ctx) error {
+		bookID := c.Params("books_id")
+		forwardURL := fmt.Sprintf("http://localhost:8080/books/%s", bookID)
+		return proxy.Forward(forwardURL)(c)
+	})
 	app.Post("/books", proxy.Forward("http://localhost:8080/books"))
-	app.Put("/books/:books_id", func(c *fiber.Ctx) error {
+	app.Put("/books/update/:books_id", func(c *fiber.Ctx) error {
 		bookID := c.Params("books_id")
 		forwardURL := fmt.Sprintf("http://localhost:8080/books/update/%s", bookID)
 		return proxy.Forward(forwardURL)(c)
