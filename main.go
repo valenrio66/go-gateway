@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -25,8 +27,16 @@ func main() {
 	// Setup proxy routes
 	app.Get("/books", proxy.Forward("http://localhost:8080/books"))
 	app.Post("/books", proxy.Forward("http://localhost:8080/books"))
-	app.Put("/books/:books_id", proxy.Forward("http://localhost:8080/books/:books_id")) // Corrected to use books_id if that's what you are using in your service
-	app.Delete("/books/:books_id", proxy.Forward("http://localhost:8080/books/:books_id"))
+	app.Put("/books/:books_id", func(c *fiber.Ctx) error {
+		bookID := c.Params("books_id")
+		forwardURL := fmt.Sprintf("http://localhost:8080/books/update/%s", bookID)
+		return proxy.Forward(forwardURL)(c)
+	})
+	app.Delete("/books/delete/:books_id", func(c *fiber.Ctx) error {
+		bookID := c.Params("books_id")
+		forwardURL := fmt.Sprintf("http://localhost:8080/books/delete/%s", bookID)
+		return proxy.Forward(forwardURL)(c)
+	})
 
 	app.Listen(":8082") // Changed from 8080 to 8082 to avoid port conflict
 }
